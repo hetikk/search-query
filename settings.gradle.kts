@@ -3,3 +3,4 @@ plugins {
 }
 rootProject.name = "search-query"
 
+include("api")
