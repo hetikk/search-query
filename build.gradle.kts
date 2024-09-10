@@ -9,6 +9,12 @@ repositories {
 subprojects {
     apply(plugin = "org.jetbrains.kotlin.jvm")
 
+    ext {
+        set("jooqVersion", "3.19.11")
+        set("postgresVersion", "42.7.4")
+        set("testcontainersVersion", "1.20.1")
+    }
+
     group = "hetikk.search-query"
     version = "0.0.1-SNAPSHOT"
 
