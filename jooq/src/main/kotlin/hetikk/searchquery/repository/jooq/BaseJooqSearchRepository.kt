@@ -17,14 +17,14 @@ import org.jooq.SelectWhereStep
 import org.jooq.impl.TableImpl
 
 abstract class BaseJooqSearchRepository<T : TableImpl<*>>(
-    val dsl: DSLContext,
-    val table: T
+    protected val dsl: DSLContext,
+    protected val table: T
 ) : JooqSearchRepository {
 
     abstract val fieldsMapper: Map<SearchQueryField, Field<*>>
 
-    override fun <R> search(resultType: Class<R>, searchQueryFunction: () -> SearchQuery): SearchResponse<R> {
-        val searchQuery = searchQueryFunction()
+    override fun <R> search(resultType: Class<R>, searchQueryLambda: () -> SearchQuery): SearchResponse<R> {
+        val searchQuery = searchQueryLambda()
         SearchQueryValidator.validate(searchQuery)
         val data = fetch(searchQuery).into(resultType)
         val meta = if (searchQuery.metaIsNeed) {
@@ -52,7 +52,7 @@ abstract class BaseJooqSearchRepository<T : TableImpl<*>>(
         )
     }
 
-    open fun queryRoot(): SelectWhereStep<Record> {
+    protected open fun queryRoot(): SelectWhereStep<Record> {
         val query = dsl.select(table.asterisk())
         query.from(table)
         return query

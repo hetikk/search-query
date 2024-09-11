@@ -5,6 +5,7 @@ import hetikk.searchquery.api.exception.UnknownFieldException
 import hetikk.searchquery.api.model.SearchQuery
 import hetikk.searchquery.api.model.SearchQueryField
 import hetikk.searchquery.api.model.filter.FilterCondition
+import hetikk.searchquery.api.model.filter.FilterOperationType
 import hetikk.searchquery.api.model.filter.FilterOperationType.BETWEEN
 import hetikk.searchquery.api.model.filter.FilterOperationType.EQUAL
 import hetikk.searchquery.api.model.filter.FilterOperationType.GREATER
@@ -21,6 +22,8 @@ import hetikk.searchquery.api.model.filter.FilterOperationType.LIKE_CASE_INSENSI
 import hetikk.searchquery.api.model.filter.FilterOperationType.NOT_BETWEEN
 import hetikk.searchquery.api.model.filter.FilterOperationType.NOT_EQUAL
 import hetikk.searchquery.api.model.filter.FilterOperationType.NOT_IN
+import hetikk.searchquery.api.model.filter.FilterOperationType.NOT_LIKE
+import hetikk.searchquery.api.model.filter.FilterOperationType.NOT_LIKE_CASE_INSENSITIVE
 import hetikk.searchquery.api.model.filter.OperatorType
 import hetikk.searchquery.api.model.filter.SimpleFilter
 import org.jooq.Condition
@@ -73,16 +76,30 @@ object JooqFilterResolver {
 
             LIKE -> {
                 val pattern = value as? String ?: throw InvalidArgumentException(
-                    "The '${filterCondition.operation}' operation requires a value with the non-nullable STRING data type"
+                    valueTypeMessage(filterCondition.operation, "STRING")
                 )
                 jooqField.like(pattern)
             }
 
+            NOT_LIKE -> {
+                val pattern = value as? String ?: throw InvalidArgumentException(
+                    valueTypeMessage(filterCondition.operation, "STRING")
+                )
+                jooqField.notLike(pattern)
+            }
+
             LIKE_CASE_INSENSITIVE -> {
                 val pattern = value as? String ?: throw InvalidArgumentException(
-                    "The '${filterCondition.operation}' operation requires a value with the non-nullable STRING data type"
+                    valueTypeMessage(filterCondition.operation, "STRING")
                 )
                 jooqField.likeIgnoreCase(pattern)
+            }
+
+            NOT_LIKE_CASE_INSENSITIVE -> {
+                val pattern = value as? String ?: throw InvalidArgumentException(
+                    valueTypeMessage(filterCondition.operation, "STRING")
+                )
+                jooqField.notLikeIgnoreCase(pattern)
             }
 
             IS_TRUE -> jooqField.isTrue
@@ -107,13 +124,12 @@ object JooqFilterResolver {
 
             BETWEEN -> {
                 val list = value as? List<*> ?: throw InvalidArgumentException(
-                    "The '${filterCondition.operation}' operation requires a value with the non-nullable LIST data type"
+                    valueTypeMessage(filterCondition.operation, "LIST")
                 )
 
                 if (list.size != 2) {
                     throw InvalidArgumentException(
-                        "The '${filterCondition.operation}' operation requires a value with a LIST " +
-                                "of two elements is required"
+                        "The '${filterCondition.operation}' operation requires a value of LIST data type with two elements is required"
                     )
                 }
 
@@ -122,7 +138,7 @@ object JooqFilterResolver {
 
             NOT_BETWEEN -> {
                 val list = value as? List<*> ?: throw InvalidArgumentException(
-                    "The '${filterCondition.operation}' operation requires a value with the non-nullable LIST data type"
+                    valueTypeMessage(filterCondition.operation, "LIST")
                 )
 
                 if (list.size != 2) {
@@ -135,6 +151,10 @@ object JooqFilterResolver {
                 jooqField.notBetween(list[0], list[1])
             }
         }
+    }
+
+    private fun valueTypeMessage(operation: FilterOperationType, type: String): String {
+        return "The '$operation' operation requires a value with the non-nullable value of $type data type"
     }
 
 }
