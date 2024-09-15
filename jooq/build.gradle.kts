@@ -97,8 +97,8 @@ tasks.register("testcontainersStart") {
 
         // stop db container after failed start
         val startResult = runCatching {
-            dbInstance.start()
             println("Starting container: ${dbInstance.containerId}")
+            dbInstance.start()
         }
         startResult.onFailure { err ->
             println("Unable to start db container")
