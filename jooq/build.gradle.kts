@@ -88,12 +88,23 @@ tasks.register("testcontainersStart") {
             withDatabaseName("test")
             withUsername("test")
             withPassword("test")
-            withCopyToContainer(MountableFile.forHostPath("$projectDir/src/test/resources/db/init.sql"), "/docker-entrypoint-initdb.d/init.sql")
+            withCopyToContainer( // alternative for withInitScript("db/init.sql")
+                MountableFile.forHostPath("$projectDir/src/test/resources/db/init.sql"),
+                "/docker-entrypoint-initdb.d/init.sql"
+            )
             waitingFor(Wait.forListeningPorts())
         }
 
-        dbInstance.start()
-        println("Starting container: ${dbInstance.containerId}")
+        // stop db container after failed start
+        val startResult = runCatching {
+            dbInstance.start()
+            println("Starting container: ${dbInstance.containerId}")
+        }
+        startResult.onFailure { err ->
+            println("Unable to start db container")
+            dbInstance.stop()
+            throw err
+        }
 
         ext {
             set("pg_container_instance", dbInstance)
